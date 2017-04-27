@@ -11,28 +11,60 @@ public class Blinky : MonoBehaviour {
     [SerializeField]
     Transform blinky;
 
+    private float dist;
+    public static bool blinky_running = true;
+    public static Vector3 blinky_startpos;
+    
+
+
     void Start () {
+        blinky_startpos = blinky.position;
         StartCoroutine(Countdown());
-                
+        Renderer rend = GetComponent<Renderer>();
+        rend.material.color = Color.red;
     }
 	
 	// Update is called once per frame
 	void Update () {
 
-        NavMeshAgent agent = GetComponent<NavMeshAgent>();
-
-        if (Powerup.powerup == false)
+        if (blinky_running == true)
         {
-            //agent.speed = 5;
-            //agent.acceleration = 10000;
-            agent.destination = pac_man.position;
-            blinky.eulerAngles = new Vector3(0, 0, 0);
-        }
-        else if(Powerup.powerup == true)
-        {
-            agent.destination = new Vector3(0.75f, 0.5f, 1f);
-        }
+            NavMeshAgent agent = GetComponent<NavMeshAgent>();
 
+            if (Powerup.powerup == false)
+            {
+                Renderer rend = GetComponent<Renderer>();
+                rend.material.color = Color.red;
+                agent.speed = 5;
+                //agent.acceleration = 10000;
+                agent.destination = pac_man.position;
+                blinky.eulerAngles = new Vector3(0, 0, 0);
+            }
+            else if (Powerup.powerup == true)
+            {
+                agent.speed = 2;
+                agent.destination = new Vector3(pac_man.position.x, 0.5f, -1 * pac_man.position.z);
+                blinky.eulerAngles = new Vector3(0, 0, 0);
+
+                Renderer rend = GetComponent<Renderer>();
+                rend.material.color = Color.white;
+
+                dist = Vector3.Distance(pac_man.position, blinky.position);
+                if (dist < 0.5)
+                {
+                    AudioSource source = GetComponent<AudioSource>();
+                    source.Play();
+                    blinky.position = blinky_startpos;
+                    agent.Warp(blinky_startpos);
+                    Pacman.score += 200;
+                }
+            }
+        }else if(blinky_running == false)
+        {
+            NavMeshAgent agent = GetComponent<NavMeshAgent>();
+            agent.Warp(blinky_startpos);
+            agent.destination = blinky.position;
+        }
     }
 
 //    void powerup()
@@ -41,10 +73,7 @@ public class Blinky : MonoBehaviour {
 //    }
     IEnumerator Countdown()
     {
-        //Create a Countdown wait timer
-        //Call End game if failed
-        yield return new WaitForSeconds(5f);
-        //yield return null; //remove this line of code
+        yield return new WaitForSeconds(1f);
     }
 
 }
